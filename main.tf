@@ -1,50 +1,24 @@
 provider "aws" {
     region = "us-east-2"
-    access_key = "AKIAXPQBME2G674B22UJ"
-    secret_key = "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"
 }
 
-variable "cidr_blocks" {
-    description = "cidr blocks amd name tags for vpc and subnet"
-    type = list(object({
-        cidr_block = string
-        name = string
-    }))
-}
+variable "vpc_cidr_block" {}
+variable "subnet_cidr_block" {}
+variable "availability_zone" {}
+variable "env_prefix" {}
 
-resource "aws_vpc" "development-vpc" {
-    cidr_block = var.cidr_blocks[0].cidr_block
+resource "aws_vpc" "myapp-vpc" {
+    cidr_block = var.vpc_cidr_block
     tags = {
-        Name = var.cidr_blocks[0].name
+        Name = "${var.env_prefix}-vpc"
     }
 }
 
-resource "aws_subnet" "dev-subnet-1" {
-    vpc_id = aws_vpc.development-vpc.id
-    cidr_block = var.cidr_blocks[1].cidr_block
-    availability_zone = "us-east-2a"
+resource "aws_subnet" "myapp-subnet-1" {
+    vpc_id = aws_vpc.myapp-vpc.id
+    cidr_block = var.subnet_cidr_block
+    availability_zone = var.availability_zone
     tags = {
-        Name =  var.cidr_blocks[1].name
+         Name = "${var.env_prefix}-subnet-1"
     }
-}
-
-data "aws_vpc" "existing-vpc" {
-    default = true
-}
-
-resource "aws_subnet" "dev-subnet-2" {
-    vpc_id = data.aws_vpc.existing-vpc.id
-    cidr_block = "172.31.48.0/20"
-    availability_zone = "us-east-2a"
-    tags = {
-        Name = "subnet-2-default"
-    }
-}
-
-output "dev-vpc-id" {
-    value = aws_vpc.development-vpc.id
-}
-
-output "dev-subnet-id" {
-    value = aws_subnet.dev-subnet-1.id
 }
